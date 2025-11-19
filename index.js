@@ -15,7 +15,12 @@ app.get('/', (req, res) => {
 
 // API для обновления данных
 app.post('/update', (req, res) => {
-  const { temperature, humidity } = req.body;
+  const { temperature, humidity, token } = req.body;
+  
+  if (token !== (process.env.TOKEN ?? 'token')) {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+
   if (temperature !== undefined && humidity !== undefined) {
     data.temperature = temperature;
     data.humidity = humidity;
