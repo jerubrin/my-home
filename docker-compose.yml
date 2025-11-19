@@ -7,9 +7,9 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-  front:
-    image: nginx:alpine
-    ports:
-      - "8080:80"
-    volumes:
-      - ./frontend:/usr/share/nginx/html
+  # front:
+  #   image: nginx:alpine
+  #   ports:
+  #     - "8080:80"
+  #   volumes:
+  #     - ./frontend:/usr/share/nginx/html
