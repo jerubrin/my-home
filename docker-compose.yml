@@ -1,17 +1,10 @@
-version: "3.3"
+version: '3.3'
 
 services:
   server:
-    build: ./backend
-    command: node server.js
+    build: .
     ports:
       - "3000:3000"
     volumes:
       - .:/app
       - /app/node_modules
-  frontend:
-    image: nginx:alpine
-    ports:
-      - "8080:80"
-    volumes:
-      - ./frontend:/usr/share/nginx/html
