@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    container_name: sensor-backend
+    ports:
+      - "3000:3000"
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: sensor-frontend
+    ports:
+      - "8080:80"
+    restart: always

@@ -20,8 +20,6 @@ logs/
 debug.log
 
 # Docker
-Dockerfile*
-docker-compose*.yml
 !.dockerignore
 *.pid
 
