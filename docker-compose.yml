@@ -3,13 +3,13 @@ version: "3.3"
 services:
   server:
     build: ./backend
-    command: npm start
+    command: node server.js
     ports:
       - "3000:3000"
     volumes:
       - .:/app
       - /app/node_modules
-  front:
+  frontend:
     image: nginx:alpine
     ports:
       - "8080:80"
