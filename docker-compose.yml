@@ -1,10 +1,14 @@
+version: '3.8'
 services:
-  backend:
-    build: ./backend
+  web:
+    build: .
+    command: npm start
     ports:
       - "3000:3000"
-    restart: always
-    command: ["node", "index.js"]
+    volumes:
+      - .:/app
+      - /app/node_modules
+
 
   frontend:
     image: nginx:alpine
