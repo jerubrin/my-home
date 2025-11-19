@@ -1,5 +1,5 @@
 services:
-  web:
+  server:
     build: .
     command: npm start
     ports:
