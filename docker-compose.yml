@@ -7,7 +7,6 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
-
   frontend:
     image: nginx:alpine
     ports:
