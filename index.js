@@ -1,8 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { default: axios } = require('axios');
-const qs = require('qs');
 require('dotenv').config();
 
 const app = express();
@@ -10,9 +8,9 @@ app.use(cors());
 app.use(express.json());
 
 let data = { temperature: 0, humidity: 0 };
-let gToken = process.env.TOKEN;
+let gToken = process.env.TOKEN ?? 'token';
 
-// Отдаём фронт
+// Отдаём фронт (если нужен)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -20,45 +18,28 @@ app.get('/yandex_ace51c4e6b10ceda.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'yandex_ace51c4e6b10ceda.html'));
 });
 
-// API для обновления данных
+// Обновление данных датчиков
 app.post('/update', (req, res) => {
   const { temperature, humidity, token } = req.body;
-  
-  if (token !== (process.env.TOKEN ?? 'token')) {
+
+  if (token !== gToken) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 
-  if (temperature !== undefined && humidity !== undefined) {
-    data.temperature = temperature;
-    data.humidity = humidity;
-    res.json({ status: 'ok' });
-  } else {
-    res.status(400).json({ error: 'Invalid data' });
-  }
+  if (temperature !== undefined) data.temperature = temperature;
+  if (humidity !== undefined) data.humidity = humidity;
+
+  res.json({ status: 'ok' });
 });
 
-// API для получения данных
+// Получение данных датчиков
 app.get('/data', (req, res) => {
   res.json(data);
 });
 
-// ------------------------------------------------------------
-// ---------- Яндекс Умный Дом API ----------------------------
-// ------------------------------------------------------------
+// ------------------- Smart Home API -------------------
 
-// 1. OAuth (упрощённый вариант)
-
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  if(username === process.env.USER && password === process.env.PASSWORD) {
-    const code = process.env.CODE; // или генерировать уникальный код
-    res.json({ code });
-  } else {
-    res.status(401).json({ error: 'Unauthorized' });
-  }
-});
-
-// 2. Алиса запрашивает список устройств
+// 1. Алиса получает список устройств
 app.get('/v1.0/user/devices', (req, res) => {
   res.json({
     request_id: "1",
@@ -104,34 +85,22 @@ app.get('/v1.0/user/devices', (req, res) => {
   });
 });
 
-// 3. Алиса спрашивает текущее значение
+// 2. Алиса спрашивает текущие значения
 app.post('/v1.0/user/devices/query', (req, res) => {
   res.json({
-    request_id: "1",
+    request_id: req.body.request_id ?? "1",
     payload: {
       devices: [
         {
           id: "sensor1",
           properties: [
-            {
-              type: "devices.properties.float",
-              state: {
-                instance: "temperature",
-                value: data.temperature
-              }
-            }
+            { type: "devices.properties.float", state: { instance: "temperature", value: data.temperature } }
           ]
         },
         {
           id: "sensor2",
           properties: [
-            {
-              type: "devices.properties.float",
-              state: {
-                instance: "humidity",
-                value: data.humidity
-              }
-            }
+            { type: "devices.properties.float", state: { instance: "humidity", value: data.humidity } }
           ]
         }
       ]
@@ -139,104 +108,51 @@ app.post('/v1.0/user/devices/query', (req, res) => {
   });
 });
 
-app.post("/v1.0/user/devices/action", (req, res) => {
-    // Датчик не принимает команды — просто успешный ответ
-    res.json({
-        request_id: req.body.request_id,
-        payload: {
-            devices: req.body.payload.devices.map(d => ({
-                id: d.id,
-                action_result: { status: "DONE" }
-            }))
-        }
-    });
+// 3. Алиса посылает команды (датчик не управляемый)
+app.post('/v1.0/user/devices/action', (req, res) => {
+  res.json({
+    request_id: req.body.request_id,
+    payload: {
+      devices: req.body.payload.devices.map(d => ({
+        id: d.id,
+        action_result: { status: "DONE" }
+      }))
+    }
+  });
 });
 
-app.head('/v1.0/', (req, res) => {
-    res.status(200).end();
-});
-
-// Unlink
+// 4. Unlink (отвязка)
 app.post('/v1.0/user/unlink', (req, res) => {
   res.json({ status: "ok" });
 });
 
-// ------------------------------------------------------------
+// ------------------- OAuth для Алисы -------------------
 
-// ---------------- OAUTH AUTHORIZATION ----------------
-
-
-// 1. Перенаправление на Яндекс
-app.get('/oauth/authorize', (req, res) => {
-  // Жёстко задаём redirect_uri, чтобы точно совпадало с Callback URL в приложении Yandex OAuth
-  const redirect_uri = encodeURIComponent('https://sac-test.online/oauth/callback');
-
-  const url = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${process.env.OAUTH_CLIENT_ID}&redirect_uri=${redirect_uri}`;
-  res.redirect(url);
-});
-
-// 2. Callback Яндекса
-app.get('/oauth/callback', async (req, res) => {
-  const code = req.query.code;
-
-  if (!code) return res.status(400).send("Code not provided");
-
-  try {
-    // Обмен кода на токен
-    const tokenResp = await axios.post(
-      'https://oauth.yandex.ru/token',
-      qs.stringify({
-        grant_type: 'authorization_code',
-        code,
-        client_id: process.env.OAUTH_CLIENT_ID,
-        client_secret: process.env.OAUTH_CLIENT_SECRET,
-      }),
-      {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      }
-    );
-
-    // Сохраняем токен в памяти (для теста)
-    gToken = tokenResp.data.access_token;
-
-    res.send("OAuth успешно пройден! Можно закрыть окно и использовать навык.");
-  } catch (e) {
-    console.error(e.response?.data || e.message);
-    res.status(500).send("Ошибка при обмене кода на токен");
-  }
-});
-
-// 3. Обмен кода на токен (Алиса ожидает JSON)
-app.post('/oauth/token', async (req, res) => {
+// Алиса сразу делает POST на /oauth/token
+app.post('/oauth/token', (req, res) => {
   const { grant_type, code, client_id, client_secret } = req.body;
 
-  if (grant_type !== 'authorization_code') return res.status(400).json({ error: "unsupported_grant_type" });
+  if (grant_type !== 'authorization_code') {
+    return res.status(400).json({ error: "unsupported_grant_type" });
+  }
+
   if (client_id !== process.env.OAUTH_CLIENT_ID || client_secret !== process.env.OAUTH_CLIENT_SECRET) {
     return res.status(401).json({ error: "invalid_client" });
   }
 
-  try {
-    // Запрос к Яндекс на получение access_token
-    const tokenResp = await axios.post(
-      'https://oauth.yandex.ru/token',
-      qs.stringify({ grant_type, code }),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
-
-    gToken = tokenResp.data.access_token;
-
-    // Алиса должна получить JSON сразу
-    res.json({
-      access_token: gToken,
-      token_type: 'bearer',
-      expires_in: tokenResp.data.expires_in || 3600
-    });
-  } catch (e) {
-    console.error(e.response?.data || e.message);
-    res.status(500).json({ error: 'token_exchange_failed' });
+  if (code !== process.env.CODE) {
+    return res.status(400).json({ error: "invalid_code" });
   }
+
+  // Отдаём токен, который Алиса использует для всех запросов
+  res.json({
+    access_token: gToken,
+    token_type: "bearer",
+    expires_in: 3600
+  });
 });
 
-// /// //// /// //
+// Проверка доступности Smart Home API
+app.head('/v1.0/', (req, res) => res.sendStatus(200));
 
 app.listen(3000, () => console.log('Server running on port 3000'));
