@@ -115,7 +115,7 @@ app.get('/v1.0/user/devices', (req, res) => {
 });
 
 // 3. Алиса спрашивает текущее значение
-app.post('/v1.0/user/devices/query', (req, res) => {
+app.get('/v1.0/user/devices/query', (req, res) => {
   res.json({
     request_id: "1",
     payload: {
