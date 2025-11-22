@@ -176,33 +176,33 @@ app.get('/oauth/authorize', (req, res) => {
 });
 
 // 2. Callback Яндекса
-app.get('/oauth/callback', async (req, res) => {
-  const code = req.query.code;
+app.post('/oauth/token', async (req, res) => {
+  const { grant_type, code, client_id, client_secret } = req.body;
 
-  if (!code) return res.status(400).send("Code not provided");
+  if (grant_type !== 'authorization_code') return res.status(400).json({ error: "unsupported_grant_type" });
+  if (client_id !== process.env.OAUTH_CLIENT_ID || client_secret !== process.env.OAUTH_CLIENT_SECRET) {
+    return res.status(401).json({ error: "invalid_client" });
+  }
 
   try {
-    // Обмен кода на токен
+    // Запрос к Яндекс на получение access_token
     const tokenResp = await axios.post(
       'https://oauth.yandex.ru/token',
-      qs.stringify({
-        grant_type: 'authorization_code',
-        code,
-        client_id: process.env.OAUTH_CLIENT_ID,
-        client_secret: process.env.OAUTH_CLIENT_SECRET,
-      }),
-      {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      }
+      qs.stringify({ grant_type, code }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
-    // Сохраняем токен в памяти (для теста)
     gToken = tokenResp.data.access_token;
 
-    res.send("OAuth успешно пройден! Можно закрыть окно и использовать навык.");
+    // Алиса должна получить JSON сразу
+    res.json({
+      access_token: gToken,
+      token_type: 'bearer',
+      expires_in: tokenResp.data.expires_in || 3600
+    });
   } catch (e) {
     console.error(e.response?.data || e.message);
-    res.status(500).send("Ошибка при обмене кода на токен");
+    res.status(500).json({ error: 'token_exchange_failed' });
   }
 });
 
