@@ -167,7 +167,7 @@ app.post('/v1.0/user/unlink', (req, res) => {
 
 // OAuth authorize — просто редирект сразу на токен
 // 2. OAuth login
-app.get('/oauth/login', (req, res) => {
+app.get('/oauth/authorize', (req, res) => {
   const { redirect_uri, state, client_id, scope } = req.query;
   const code = process.env.CODE;
   const url = `${redirect_uri}?code=${code}&state=${state}&client_id=${client_id}&scope=${scope}`;
@@ -175,7 +175,7 @@ app.get('/oauth/login', (req, res) => {
 });
 
 // 3. OAuth token
-app.post('/token', (req, res) => {
+app.post('/oauth/token', (req, res) => {
   res.json({
     access_token: "ACCESS_TOKEN",
     token_type: "bearer",
@@ -191,7 +191,7 @@ app.post('/token', (req, res) => {
 });
 
 // 6. Обновление токена (refresh)
-app.post('/refresh', (req, res) => {
+app.post('/oauth/refresh', (req, res) => {
   const refresh_token = req.body.refresh_token || "REFRESH_TOKEN";
   res.json({
     access_token: 'ACCESS_TOKEN',
