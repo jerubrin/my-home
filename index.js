@@ -68,7 +68,7 @@ app.get('/v1.0/user/devices', (req, res) => {
         {
           id: "sensor1",
           name: "Температура и влажность",
-          type: "devices.types.sensor_climate",
+          type: "devices.types.sensor.climate",
           capabilities: [],
           properties: [
             {
@@ -117,6 +117,7 @@ app.post('/v1.0/user/devices/query', (req, res) => {
               type: "devices.properties.float",
               state: {
                 instance: "temperature",
+                unit: "unit.temperature.celsius",
                 value: data.temperature
               }
             },
@@ -124,6 +125,7 @@ app.post('/v1.0/user/devices/query', (req, res) => {
               type: "devices.properties.float",
               state: {
                 instance: "humidity",
+                unit: "unit.percent",
                 value: data.humidity
               }
             },
