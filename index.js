@@ -55,11 +55,6 @@ app.post('/login', (req, res) => {
   }
 });
 
-app.get('/oauth/authorize', (req, res) => {
-  const redirect = `${req.query.redirect_uri}?code=123456&state=${req.query.state}`;
-  res.redirect(redirect);
-});
-
 app.post('/oauth/token', (req, res) => {
   const { code } = req.body;
   if(code === process.env.CODE) {
@@ -74,7 +69,7 @@ app.post('/oauth/token', (req, res) => {
 });
 
 // 2. Алиса запрашивает список устройств
-app.post('/v1.0/user/devices', (req, res) => {
+app.get('/v1.0/user/devices', (req, res) => {
   res.json({
     request_id: "1",
     payload: {
@@ -186,7 +181,7 @@ app.get('/oauth/authorize', (req, res) => {
 
     // Проверяем client_id
     if (client_id !== process.env.OAUTH_CLIENT_ID) {
-        return res.status(400).send("Invalid client_id");
+      return res.status(400).send("Invalid client_id");
     }
 
     // Для простоты сразу возвращаем код без формы логина
