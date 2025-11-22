@@ -13,6 +13,9 @@ let data = { temperature: 0, humidity: 0 };
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
+app.get('/yandex_ace51c4e6b10ceda.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'yandex_ace51c4e6b10ceda.html'));
+});
 
 // API для обновления данных
 app.post('/update', (req, res) => {
