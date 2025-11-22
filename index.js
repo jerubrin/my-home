@@ -8,6 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 let data = { temperature: 0, humidity: 0 };
+let gToken = process.env.TOKEN;
 
 // Отдаём фронт
 app.get('/', (req, res) => {
@@ -191,7 +192,7 @@ app.get('/oauth/callback', async (req, res) => {
     });
 
     // Сохраняем токен в памяти (для теста)
-    process.env.TOKEN = tokenResp.data.access_token;
+    gToken = tokenResp.data.access_token;
 
     res.send("OAuth успешно пройден! Можно закрыть окно и использовать навык.");
   } catch (e) {
@@ -218,7 +219,7 @@ app.post('/oauth/token', (req, res) => {
     }
 
     return res.json({
-        access_token: process.env.TOKEN,
+        access_token: gToken,
         token_type: "bearer",
         expires_in: 3600
     });
