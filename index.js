@@ -188,6 +188,7 @@ app.get('/oauth/authorize', (req, res) => {
     const code = process.env.CODE;
 
     const redirect = `${redirect_uri}?code=${code}&state=${state}`;
+    console.log('redirect_uri', redirect_uri, redirect);
     res.redirect(redirect);
 });
 
