@@ -163,21 +163,41 @@ app.post('/v1.0/user/unlink', (req, res) => {
 // ---------------- OAUTH AUTHORIZATION ----------------
 
 // Страница логина (простейшая)
+// ------------------- OAUTH через Yandex ID -------------------
+
+// 1. Перенаправление на Яндекс
 app.get('/oauth/authorize', (req, res) => {
-    const { client_id, redirect_uri, state } = req.query;
+  const redirect_uri = encodeURIComponent(`${process.env.BASE_URL}/oauth/callback`);
+  const url = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${process.env.OAUTH_CLIENT_ID}&redirect_uri=${redirect_uri}`;
+  res.redirect(url);
+});
 
-    // Проверяем client_id
-    if (client_id !== process.env.OAUTH_CLIENT_ID) {
-      return res.status(400).send("Invalid client_id");
-    }
+// 2. Callback Яндекса
+app.get('/oauth/callback', async (req, res) => {
+  const code = req.query.code;
 
-    // Для простоты сразу возвращаем код без формы логина
-    const code = process.env.CODE;
+  if (!code) return res.status(400).send("Code not provided");
 
-    const redirect = `${redirect_uri}?code=${code}&state=${state}`;
-    console.log(client_id, redirect_uri, state);
-    console.log('redirect_uri', redirect);
-    res.redirect(`${redirect_uri}?code=${code}&state=${state}`);
+  try {
+    // Обмен кода на токен
+    const tokenResp = await axios.post('https://oauth.yandex.ru/token', null, {
+      params: {
+        grant_type: 'authorization_code',
+        code,
+        client_id: process.env.OAUTH_CLIENT_ID,
+        client_secret: process.env.OAUTH_CLIENT_SECRET,
+      },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    // Сохраняем токен в памяти (для теста)
+    process.env.TOKEN = tokenResp.data.access_token;
+
+    res.send("OAuth успешно пройден! Можно закрыть окно и использовать навык.");
+  } catch (e) {
+    console.error(e.response?.data || e.message);
+    res.status(500).send("Ошибка при обмене кода на токен");
+  }
 });
 
 // Обмен кода на токен
