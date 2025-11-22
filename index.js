@@ -178,4 +178,48 @@ app.post('/v1.0/user/unlink', (req, res) => {
 
 // ------------------------------------------------------------
 
+// ---------------- OAUTH AUTHORIZATION ----------------
+
+// Страница логина (простейшая)
+app.get('/oauth/authorize', (req, res) => {
+    const { client_id, redirect_uri, state } = req.query;
+
+    // Проверяем client_id
+    if (client_id !== process.env.OAUTH_CLIENT_ID) {
+        return res.status(400).send("Invalid client_id");
+    }
+
+    // Для простоты сразу возвращаем код без формы логина
+    const code = process.env.CODE;
+
+    const redirect = `${redirect_uri}?code=${code}&state=${state}`;
+    res.redirect(redirect);
+});
+
+// Обмен кода на токен
+app.post('/oauth/token', (req, res) => {
+    const { grant_type, code, client_id, client_secret } = req.body;
+
+    if (grant_type !== 'authorization_code') {
+        return res.status(400).json({ error: "unsupported_grant_type" });
+    }
+
+    if (client_id !== process.env.OAUTH_CLIENT_ID ||
+        client_secret !== process.env.OAUTH_CLIENT_SECRET) {
+        return res.status(401).json({ error: "invalid_client" });
+    }
+
+    if (code !== process.env.CODE) {
+        return res.status(400).json({ error: "invalid_code" });
+    }
+
+    return res.json({
+        access_token: process.env.TOKEN,
+        token_type: "bearer",
+        expires_in: 3600
+    });
+});
+
+// /// //// /// //
+
 app.listen(3000, () => console.log('Server running on port 3000'));
