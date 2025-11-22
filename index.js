@@ -67,8 +67,8 @@ app.get('/v1.0/user/devices', (req, res) => {
       devices: [
         {
           id: "sensor1",
-          name: "Температура детской",
-          type: "devices.types.sensor.temperature",
+          name: "Температура и влажность",
+          type: "devices.types.sensor_climate",
           capabilities: [],
           properties: [
             {
@@ -78,27 +78,27 @@ app.get('/v1.0/user/devices', (req, res) => {
               parameters: {
                 instance: "temperature",
                 unit: "unit.temperature.celsius"
+              },
+              state: {
+                instance: "temperature",
+                value: data.temperature,
               }
-            }
-          ]
-        },
-        {
-          id: "sensor2",
-          name: "Влажность детской",
-          type: "devices.types.sensor.humidity",
-          capabilities: [],
-          properties: [
+            },
             {
               type: "devices.properties.float",
               retrievable: true,
-              reportable: false,
+              reportable: true,
               parameters: {
                 instance: "humidity",
                 unit: "unit.percent"
+              },
+              state: {
+                instance: "humidity",
+                value: data.humidity,
               }
-            }
+            },
           ]
-        }
+        },
       ]
     }
   });
@@ -119,19 +119,14 @@ app.post('/v1.0/user/devices/query', (req, res) => {
                 instance: "temperature",
                 value: data.temperature
               }
-            }
-          ]
-        },
-        {
-          id: "sensor2",
-          properties: [
+            },
             {
               type: "devices.properties.float",
               state: {
                 instance: "humidity",
                 value: data.humidity
               }
-            }
+            },
           ]
         }
       ]
