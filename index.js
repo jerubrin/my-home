@@ -169,7 +169,7 @@ app.post('/v1.0/user/unlink', (req, res) => {
 // 2. OAuth login
 app.get('/oauth/login', (req, res) => {
   const { redirect_uri, state, client_id, scope } = req.query;
-  const code = '1234';
+  const code = process.env.CODE;
   const url = `${redirect_uri}?code=${code}&state=${state}&client_id=${client_id}&scope=${scope}`;
   res.redirect(url);
 });
@@ -204,7 +204,7 @@ app.post('/refresh', (req, res) => {
 app.get('/oauth/login', (req, res) => {
   const { redirect_uri = '', state = '', client_id = '', scope = '' } = req.query;
 
-  const code = '1234'; // фиктивный код авторизации
+  const code = process.env.CODE;
   const url = `${redirect_uri}?code=${code}&state=${encodeURIComponent(state)}&client_id=${encodeURIComponent(client_id)}&scope=${encodeURIComponent(scope)}`;
 
   res.redirect(url);
