@@ -162,16 +162,11 @@ app.post('/v1.0/user/unlink', (req, res) => {
 
 // ---------------- OAUTH AUTHORIZATION ----------------
 
-// Страница логина (простейшая)
-// ------------------- OAUTH через Yandex ID -------------------
-
-// 1. Перенаправление на Яндекс
-// ------------------- OAUTH через Yandex ID -------------------
 
 // 1. Перенаправление на Яндекс
 app.get('/oauth/authorize', (req, res) => {
   // Жёстко задаём redirect_uri, чтобы точно совпадало с Callback URL в приложении Yandex OAuth
-  const redirect_uri = encodeURIComponent('https://oauth.yandex.ru/verification_code');
+  const redirect_uri = encodeURIComponent('https://sac-test.online/oauth/callback');
 
   const url = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${process.env.OAUTH_CLIENT_ID}&redirect_uri=${redirect_uri}`;
   res.redirect(url);
