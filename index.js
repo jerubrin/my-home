@@ -161,26 +161,55 @@ app.post('/v1.0/user/unlink', (req, res) => {
   res.json({ status: "ok" });
 });
 
-// ------------------------------------------------------------
+// -----------------------------------------------------------
 
 // ---------------- OAUTH AUTHORIZATION ----------------
 
 // OAuth authorize — просто редирект сразу на токен
-app.get('/oauth/authorize', (req, res) => {
-  const redirect_uri = req.query.redirect_uri;
-  const code = "dummy_code"; // любой код
-  // сразу редиректим с кодом
-  res.redirect(`${redirect_uri}?code=${code}&state=${req.query.state}`);
+// 2. OAuth login
+app.get('/oauth/login', (req, res) => {
+  const { redirect_uri, state, client_id, scope } = req.query;
+  const code = '1234';
+  const url = `${redirect_uri}?code=${code}&state=${state}&client_id=${client_id}&scope=${scope}`;
+  res.redirect(url);
 });
 
-// OAuth token — возвращаем “левый” токен
-app.post('/oauth/token', (req, res) => {
+// 3. OAuth token
+app.post('/token', (req, res) => {
   res.json({
-    access_token: TEST_TOKEN,
+    access_token: "ACCESS_TOKEN",
     token_type: "bearer",
-    expires_in: 3600
+    expires_in: 2592000,
+    refresh_token: "REFRESH_TOKEN",
+    scope: "read",
+    uid: 100101,
+    info: {
+      name: "User",
+      email: "info@example.com"
+    }
   });
 });
+
+// 6. Обновление токена (refresh)
+app.post('/refresh', (req, res) => {
+  const refresh_token = req.body.refresh_token || "REFRESH_TOKEN";
+  res.json({
+    access_token: 'ACCESS_TOKEN',
+    refresh_token,
+    token_type: 'bearer',
+    expires_in: 2592000
+  });
+});
+
+app.get('/oauth/login', (req, res) => {
+  const { redirect_uri = '', state = '', client_id = '', scope = '' } = req.query;
+
+  const code = '1234'; // фиктивный код авторизации
+  const url = `${redirect_uri}?code=${code}&state=${encodeURIComponent(state)}&client_id=${encodeURIComponent(client_id)}&scope=${encodeURIComponent(scope)}`;
+
+  res.redirect(url);
+});
+
 
 // /// //// /// //
 
