@@ -168,18 +168,11 @@ app.post('/v1.0/user/unlink', (req, res) => {
 
 // 1. Перенаправление на Яндекс
 app.get('/oauth/authorize', (req, res) => {
-  const { client_id, redirect_uri, state } = req.query;
+  // Жёстко задаём redirect_uri, чтобы точно совпадало с Callback URL в приложении Yandex OAuth
+  const redirect_uri = encodeURIComponent('https://sac-test.online/oauth/callback');
 
-  // Проверяем client_id
-  if (client_id !== process.env.OAUTH_CLIENT_ID) {
-    return res.status(400).send("Invalid client_id");
-  }
-
-  // Авторизация пользователя (упрощённо — можно показать форму логина)
-  // После авторизации редиректим на redirect_uri Яндекса
-  const code = process.env.CODE; // генерируем код
-  const redirectUrl = `${redirect_uri}?code=${code}&state=${encodeURIComponent(state)}`;
-  return res.redirect(redirectUrl);
+  const url = `https://oauth.yandex.ru/authorize?response_type=code&client_id=${process.env.OAUTH_CLIENT_ID}&redirect_uri=${redirect_uri}`;
+  res.redirect(url);
 });
 
 // 2. Callback Яндекса
