@@ -182,15 +182,18 @@ app.get('/oauth/callback', async (req, res) => {
 
   try {
     // Обмен кода на токен
-    const tokenResp = await axios.post('https://oauth.yandex.ru/token', null, {
-      params: {
+    const tokenResp = await axios.post(
+      'https://oauth.yandex.ru/token',
+      qs.stringify({
         grant_type: 'authorization_code',
         code,
         client_id: process.env.OAUTH_CLIENT_ID,
         client_secret: process.env.OAUTH_CLIENT_SECRET,
-      },
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-    });
+      }),
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      }
+    );
 
     // Сохраняем токен в памяти (для теста)
     gToken = tokenResp.data.access_token;
