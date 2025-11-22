@@ -151,6 +151,23 @@ app.post('/v1.0/user/devices/query', (req, res) => {
   });
 });
 
+app.post("/v1.0/user/devices/action", (req, res) => {
+    // Датчик не принимает команды — просто успешный ответ
+    res.json({
+        request_id: req.body.request_id,
+        payload: {
+            devices: req.body.payload.devices.map(d => ({
+                id: d.id,
+                action_result: { status: "DONE" }
+            }))
+        }
+    });
+});
+
+app.head('/v1.0/', (req, res) => {
+    res.status(200).end();
+});
+
 // Unlink
 app.post('/v1.0/user/unlink', (req, res) => {
   res.json({ status: "ok" });
