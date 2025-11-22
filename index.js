@@ -55,19 +55,6 @@ app.post('/login', (req, res) => {
   }
 });
 
-app.post('/oauth/token', (req, res) => {
-  const { code } = req.body;
-  if(code === process.env.CODE) {
-    res.json({
-      access_token: process.env.TOKEN ?? 'token',
-      token_type: "bearer",
-      expires_in: 3600
-    });
-  } else {
-    res.status(400).json({ error: 'Invalid code' });
-  }
-});
-
 // 2. Алиса запрашивает список устройств
 app.get('/v1.0/user/devices', (req, res) => {
   res.json({
@@ -188,8 +175,9 @@ app.get('/oauth/authorize', (req, res) => {
     const code = process.env.CODE;
 
     const redirect = `${redirect_uri}?code=${code}&state=${state}`;
-    console.log('redirect_uri', redirect_uri, redirect);
-    res.redirect(redirect);
+    console.log(client_id, redirect_uri, state);
+    console.log('redirect_uri', redirect);
+    res.redirect(`${redirect_uri}?code=${code}&state=${state}`);
 });
 
 // Обмен кода на токен
